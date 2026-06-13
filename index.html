@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<!-- Hallmark · macrostructure: Workbench · genre: modern-minimal · tone: utilitarian/drafting-precise
+     theme: blueprint-calm (warm paper · ink · measured-blue accent · mono numerals)
+     pre-emit critique: P5 H4 E4 S5 R5 V4 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gallery Wall Planner</title>
+<meta name="description" content="Plan a framed gallery wall to scale. Enter wall and artwork dimensions, set matte and frame widths, and see the layout and square footage.">
+<style>
+  /* ---- tokens ---- */
+  :root{
+    --paper:        oklch(98.6% 0.004 95);
+    --paper-2:      oklch(96.4% 0.005 95);
+    --paper-3:      oklch(93.8% 0.006 95);
+    --ink:          oklch(27% 0.014 262);
+    --ink-2:        oklch(44% 0.012 262);
+    --ink-3:        oklch(60% 0.010 262);
+    --line:         oklch(88% 0.008 262);
+    --line-2:       oklch(82% 0.010 262);
+    --accent:       oklch(52% 0.135 252);
+    --accent-soft:  oklch(94% 0.030 252);
+    --accent-ink:   oklch(40% 0.130 252);
+    --warn:         oklch(58% 0.165 38);
+    --warn-soft:    oklch(95% 0.040 50);
+    --ok:           oklch(55% 0.110 152);
+
+    /* viz */
+    --wall-face:    oklch(95.5% 0.005 95);
+    --frame:        oklch(34% 0.020 60);
+    --frame-edge:   oklch(26% 0.022 60);
+    --mat:          oklch(97.5% 0.004 95);
+    --art:          oklch(86% 0.028 252);
+    --art-2:        oklch(82% 0.034 252);
+
+    --space-2: .125rem; --space-4:.25rem; --space-6:.375rem; --space-8:.5rem;
+    --space-12:.75rem; --space-16:1rem; --space-20:1.25rem; --space-24:1.5rem;
+    --space-32:2rem; --space-40:2.5rem; --space-48:3rem;
+
+    --text-xs:.6875rem; --text-sm:.8125rem; --text-base:.9375rem;
+    --text-lg:1.0625rem; --text-xl:1.375rem; --text-2xl:1.875rem;
+
+    --radius: 9px; --radius-sm:6px;
+    --ring: 0 0 0 3px var(--accent-soft);
+    --shadow: 0 1px 2px oklch(27% 0.014 262 / .05), 0 4px 16px oklch(27% 0.014 262 / .06);
+
+    --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-num: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+    --ease-out: cubic-bezier(.2,.7,.2,1);
+    --dur: 140ms;
+  }
+
+  *{box-sizing:border-box}
+  html,body{overflow-x:clip}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-ui); font-size:var(--text-base); line-height:1.5;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  .num{font-family:var(--font-num); font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
+
+  /* ---- masthead ---- */
+  header.app{
+    display:flex; align-items:center; gap:var(--space-16);
+    padding:var(--space-16) var(--space-24);
+    border-bottom:1px solid var(--line);
+    background:color-mix(in oklab, var(--paper), white 30%);
+    position:sticky; top:0; z-index:20; backdrop-filter:saturate(1.2) blur(6px);
+  }
+  .brand{display:flex; align-items:center; gap:var(--space-12); min-width:0}
+  .brand .mark{
+    width:34px; height:34px; flex-shrink:0; border-radius:7px;
+    border:1.5px solid var(--ink); position:relative; background:var(--paper);
+  }
+  .brand .mark::before,.brand .mark::after{
+    content:""; position:absolute; inset:6px; border:1.5px solid var(--frame);
+  }
+  .brand .mark::after{inset:11px; border-color:var(--accent); background:var(--art)}
+  .brand h1{font-size:var(--text-lg); line-height:1.1; margin:0; letter-spacing:-.012em}
+  .brand p{margin:0; font-size:var(--text-xs); color:var(--ink-3); letter-spacing:.02em}
+  header.app .spacer{flex:1}
+  .unit-toggle{display:flex; align-items:center; gap:var(--space-8); font-size:var(--text-sm); color:var(--ink-2)}
+
+  /* ---- buttons ---- */
+  button{font-family:inherit; cursor:pointer}
+  .btn{
+    display:inline-flex; align-items:center; gap:var(--space-8);
+    font-size:var(--text-sm); font-weight:560; letter-spacing:-.005em;
+    padding:var(--space-8) var(--space-16); border-radius:var(--radius-sm);
+    border:1px solid var(--line-2); background:var(--paper); color:var(--ink);
+    transition:background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
+  }
+  .btn:hover{background:var(--paper-2); border-color:var(--ink-3)}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:none; box-shadow:var(--ring); border-color:var(--accent)}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:white}
+  .btn.primary:hover{background:var(--accent-ink); border-color:var(--accent-ink)}
+  .btn.ghost{border-color:transparent; background:transparent; color:var(--ink-2); padding-inline:var(--space-8)}
+  .btn.ghost:hover{background:var(--paper-3); color:var(--ink)}
+  .btn.sm{padding:var(--space-6) var(--space-12); font-size:var(--text-xs)}
+
+  /* ---- layout ---- */
+  main{display:grid; grid-template-columns:minmax(0,360px) minmax(0,1fr); align-items:start; min-height:calc(100dvh - 67px)}
+  @media (max-width:880px){ main{grid-template-columns:minmax(0,1fr)} }
+
+  .panel{
+    border-right:1px solid var(--line); padding:var(--space-24);
+    display:flex; flex-direction:column; gap:var(--space-24);
+    position:sticky; top:67px; max-height:calc(100dvh - 67px); overflow-y:auto;
+  }
+  @media (max-width:880px){ .panel{position:static; max-height:none; border-right:none; border-bottom:1px solid var(--line)} }
+
+  .group{display:flex; flex-direction:column; gap:var(--space-12)}
+  .group > .label{
+    font-size:var(--text-xs); font-weight:640; text-transform:uppercase;
+    letter-spacing:.07em; color:var(--ink-3); display:flex; align-items:center; gap:var(--space-8);
+  }
+  .group > .label .hint{font-weight:400; text-transform:none; letter-spacing:0; color:var(--ink-3)}
+
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:var(--space-12)}
+  .field{display:flex; flex-direction:column; gap:var(--space-4)}
+  .field label{font-size:var(--text-xs); color:var(--ink-2)}
+  .field .with-unit{position:relative; display:flex; align-items:center}
+  .field .with-unit .u{position:absolute; right:var(--space-12); font-size:var(--text-xs); color:var(--ink-3); pointer-events:none}
+  input[type=text], input[type=number]{
+    width:100%; font-family:var(--font-num); font-size:var(--text-base);
+    font-variant-numeric:tabular-nums; color:var(--ink);
+    padding:var(--space-8) var(--space-12); padding-right:var(--space-32);
+    border:1px solid var(--line-2); border-radius:var(--radius-sm); background:var(--paper);
+    transition:border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+    -moz-appearance:textfield;
+  }
+  input[type=text]{font-family:var(--font-ui); padding-right:var(--space-12)}
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+  input:focus{outline:none; border-color:var(--accent); box-shadow:var(--ring)}
+  input:invalid{border-color:var(--warn)}
+
+  /* ---- pieces list ---- */
+  .pieces{display:flex; flex-direction:column; gap:var(--space-8)}
+  .piece{
+    display:grid; grid-template-columns:1fr; gap:var(--space-8);
+    padding:var(--space-12); border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--paper-2);
+  }
+  .piece .top{display:flex; align-items:center; gap:var(--space-8)}
+  .piece .sw{width:14px; height:14px; border-radius:3px; flex-shrink:0; border:1.5px solid var(--frame-edge); background:var(--art)}
+  .piece .name{flex:1; min-width:0}
+  .piece .name input{border-color:transparent; background:transparent; padding-inline:var(--space-6); font-weight:560}
+  .piece .name input:hover{border-color:var(--line-2); background:var(--paper)}
+  .piece .dims{display:grid; grid-template-columns:1fr 14px 1fr 1fr; gap:var(--space-6); align-items:center}
+  .piece .dims .x{text-align:center; color:var(--ink-3); font-size:var(--text-xs)}
+  .piece .mini{display:flex; flex-direction:column; gap:var(--space-2)}
+  .piece .mini label{font-size:.625rem; color:var(--ink-3); text-transform:uppercase; letter-spacing:.04em}
+  .piece .mini input{padding:var(--space-6); padding-right:var(--space-6); font-size:var(--text-sm); text-align:center}
+  .piece .ovr{display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-6)}
+  .piece .rm{flex-shrink:0}
+  .piece.over{border-color:var(--warn); background:var(--warn-soft)}
+
+  .del{
+    width:26px; height:26px; display:grid; place-items:center; border-radius:6px;
+    border:1px solid transparent; background:transparent; color:var(--ink-3);
+    transition:all var(--dur) var(--ease-out);
+  }
+  .del:hover{background:var(--warn-soft); color:var(--warn); border-color:color-mix(in oklab,var(--warn),white 60%)}
+  .del:focus-visible{outline:none; box-shadow:var(--ring)}
+
+  details.import{border:1px dashed var(--line-2); border-radius:var(--radius); overflow:hidden}
+  details.import summary{
+    list-style:none; cursor:pointer; padding:var(--space-12) var(--space-16);
+    font-size:var(--text-sm); font-weight:560; color:var(--ink-2);
+    display:flex; align-items:center; gap:var(--space-8);
+  }
+  details.import summary::-webkit-details-marker{display:none}
+  details.import summary .chev{transition:transform var(--dur) var(--ease-out); color:var(--ink-3)}
+  details.import[open] summary .chev{transform:rotate(90deg)}
+  details.import .body{padding:0 var(--space-16) var(--space-16); display:flex; flex-direction:column; gap:var(--space-12)}
+  details.import textarea{
+    width:100%; min-height:96px; resize:vertical; font-family:var(--font-num); font-size:var(--text-sm);
+    padding:var(--space-12); border:1px solid var(--line-2); border-radius:var(--radius-sm); background:var(--paper); color:var(--ink);
+  }
+  details.import textarea:focus{outline:none; border-color:var(--accent); box-shadow:var(--ring)}
+  details.import p{margin:0; font-size:var(--text-xs); color:var(--ink-3); line-height:1.5}
+
+  .checkrow{display:flex; align-items:center; gap:var(--space-8); font-size:var(--text-sm); color:var(--ink-2); cursor:pointer}
+  .checkrow input{width:auto; accent-color:var(--accent)}
+
+  /* ---- stage ---- */
+  .stage{padding:var(--space-24); display:flex; flex-direction:column; gap:var(--space-16); min-width:0}
+
+  .summary{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:var(--space-12);
+  }
+  .stat{
+    border:1px solid var(--line); border-radius:var(--radius); padding:var(--space-12) var(--space-16);
+    background:var(--paper-2); display:flex; flex-direction:column; gap:var(--space-2);
+  }
+  .stat .v{font-family:var(--font-num); font-size:var(--text-xl); letter-spacing:-.01em; line-height:1.05; color:var(--ink)}
+  .stat .v small{font-size:var(--text-sm); color:var(--ink-3)}
+  .stat .k{font-size:var(--text-xs); color:var(--ink-3); text-transform:uppercase; letter-spacing:.05em}
+  .stat.flag .v{color:var(--warn)}
+  .stat.fit .v{color:var(--ok)}
+
+  .notice{
+    display:none; align-items:flex-start; gap:var(--space-12);
+    padding:var(--space-12) var(--space-16); border-radius:var(--radius);
+    background:var(--warn-soft); border:1px solid color-mix(in oklab,var(--warn),white 55%);
+    color:color-mix(in oklab,var(--warn),black 18%); font-size:var(--text-sm); line-height:1.5;
+  }
+  .notice.show{display:flex}
+  .notice svg{flex-shrink:0; margin-top:2px}
+
+  .canvas-wrap{
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--paper-2);
+    padding:var(--space-24); position:relative; overflow:hidden;
+  }
+  .canvas-wrap .scalebadge{
+    position:absolute; top:var(--space-12); right:var(--space-16);
+    font-family:var(--font-num); font-size:var(--text-xs); color:var(--ink-3);
+    background:color-mix(in oklab,var(--paper),white 40%); padding:2px var(--space-8); border-radius:5px; border:1px solid var(--line);
+  }
+  svg#wall{display:block; width:100%; height:auto; max-height:64dvh; touch-action:none}
+  svg#wall .unit{cursor:grab}
+  svg#wall .unit:hover > rect:first-child{stroke:var(--accent); stroke-width:1.2px}
+  svg#wall .unit.dragging{cursor:grabbing}
+  svg#wall .unit.dragging > rect:first-child{stroke:var(--accent)}
+  svg#wall .unit:focus{outline:none}
+  svg#wall .unit:focus-visible > rect:first-child{stroke:var(--accent); stroke-width:1.6px}
+  @media print{ svg#wall .unit{cursor:default} svg#wall .unit:hover > rect:first-child{stroke:var(--frame-edge)} }
+  .empty{display:grid; place-items:center; min-height:260px; color:var(--ink-3); text-align:center; gap:var(--space-8); padding:var(--space-24)}
+  .empty svg{opacity:.5}
+
+  .stage-actions{display:flex; flex-wrap:wrap; gap:var(--space-8); align-items:center}
+  .stage-actions .spacer{flex:1}
+
+  footer.app{padding:var(--space-16) var(--space-24); border-top:1px solid var(--line); color:var(--ink-3); font-size:var(--text-xs); display:flex; gap:var(--space-12); flex-wrap:wrap; align-items:center}
+  footer.app a{color:var(--ink-2)}
+
+  /* art labels inside svg */
+  .pieceLabel{font-family:var(--font-num); fill:var(--accent-ink); font-size:11px}
+  .pieceDim{font-family:var(--font-num); fill:var(--ink-3); font-size:9px}
+  .wallDim{font-family:var(--font-num); fill:var(--ink-3); font-size:11px}
+
+  @media (prefers-reduced-motion: reduce){ *{transition-duration:1ms !important} }
+
+  /* ---- print ---- */
+  @media print{
+    @page{margin:0.5in}
+    header.app, .panel, .stage-actions, footer.app, .scalebadge, .unit-toggle{display:none !important}
+    main{display:block; min-height:0}
+    .stage{padding:0}
+    .canvas-wrap{border:none; padding:0; background:none}
+    body{background:white}
+    .summary{margin-bottom:.3in}
+    .print-head{display:flex !important}
+  }
+  .print-head{display:none; justify-content:space-between; align-items:baseline; margin-bottom:.1in}
+  .print-head h2{margin:0; font-size:1.1rem}
+  .print-head .num{color:#555; font-size:.8rem}
+</style>
+</head>
+<body>
+<header class="app">
+  <div class="brand">
+    <div class="mark" aria-hidden="true"></div>
+    <div>
+      <h1>Gallery Wall Planner</h1>
+      <p>Frame layout &amp; square-footage, to scale</p>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <label class="unit-toggle">Units
+    <select id="units" class="btn sm" style="font-family:var(--font-num)">
+      <option value="in">inches</option>
+      <option value="cm">cm</option>
+    </select>
+  </label>
+</header>
+
+<main>
+  <!-- ===== control panel ===== -->
+  <section class="panel" aria-label="Inputs">
+    <div class="group">
+      <div class="label">Wall <span class="hint">— the surface you're hanging on</span></div>
+      <div class="field-row">
+        <div class="field">
+          <label for="wallW">Width</label>
+          <div class="with-unit"><input id="wallW" type="number" min="1" step="0.25" value="144"><span class="u uLabel">in</span></div>
+        </div>
+        <div class="field">
+          <label for="wallH">Height</label>
+          <div class="with-unit"><input id="wallH" type="number" min="1" step="0.25" value="96"><span class="u uLabel">in</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="label">Defaults <span class="hint">— applied to every piece</span></div>
+      <div class="field-row" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="field">
+          <label for="defMat">Matte</label>
+          <div class="with-unit"><input id="defMat" type="number" min="0" step="0.25" value="2"><span class="u uLabel">in</span></div>
+        </div>
+        <div class="field">
+          <label for="defFrame">Frame</label>
+          <div class="with-unit"><input id="defFrame" type="number" min="0" step="0.125" value="1"><span class="u uLabel">in</span></div>
+        </div>
+        <div class="field">
+          <label for="gap">Spacing</label>
+          <div class="with-unit"><input id="gap" type="number" min="0" step="0.5" value="3"><span class="u uLabel">in</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="label">
+        Artwork <span class="hint">— art size, before matte &amp; frame</span>
+      </div>
+      <div class="pieces" id="pieces"></div>
+      <button class="btn sm" id="add" style="align-self:flex-start">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v10M1.5 6.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Add piece
+      </button>
+
+      <details class="import">
+        <summary><span class="chev">▸</span> Paste from a spreadsheet</summary>
+        <div class="body">
+          <p>One piece per line. Columns: <strong>name, width, height</strong> — and optionally matte, frame, quantity. Tabs or commas both work. Paste straight from Excel / Google Sheets.</p>
+          <textarea id="csv" placeholder="Sunflowers	18	24&#10;Harbor study	11	14	2	0.75&#10;Portrait, large	24	36	3	1.5	2"></textarea>
+          <div style="display:flex; gap:.5rem">
+            <button class="btn sm primary" id="importBtn">Import &amp; replace</button>
+            <button class="btn sm" id="appendBtn">Add to list</button>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="group">
+      <div class="label">Display</div>
+      <label class="checkrow"><input type="checkbox" id="optCenter" checked> Center each row on the wall</label>
+      <label class="checkrow"><input type="checkbox" id="optLine"> Show 57″ hang center-line</label>
+      <label class="checkrow"><input type="checkbox" id="optLabels" checked> Label pieces &amp; dimensions</label>
+    </div>
+
+    <div class="group">
+      <button class="btn ghost sm" id="reset" style="align-self:flex-start; color:var(--warn)">Reset to example</button>
+    </div>
+  </section>
+
+  <!-- ===== stage ===== -->
+  <section class="stage" aria-label="Layout">
+    <div class="print-head">
+      <h2 id="printTitle">Gallery Wall Layout</h2>
+      <span class="num" id="printMeta"></span>
+    </div>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="notice" id="notice" role="status">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.6" r=".9" fill="currentColor"/></svg>
+      <span id="noticeText"></span>
+    </div>
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <span class="scalebadge num" id="scaleBadge"></span>
+      <svg id="wall" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scale drawing of the gallery wall"></svg>
+    </div>
+
+    <p id="dragHint" style="margin:calc(-1*var(--space-8)) 0 0; font-size:var(--text-xs); color:var(--ink-3); display:flex; align-items:center; gap:var(--space-8)">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 5.5 4M8 1.5 10.5 4M8 14.5 5.5 12M8 14.5 10.5 12M1.5 8 4 5.5M1.5 8 4 10.5M14.5 8 12 5.5M14.5 8 12 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Drag any piece to arrange it. Use arrow keys to nudge.
+    </p>
+
+    <div class="stage-actions">
+      <button class="btn primary" id="print">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 6V2h8v4M4 12H2.5V6.5h11V12H12M4 9.5h8V14H4V9.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+        Print / Save PDF
+      </button>
+      <button class="btn" id="autoArrange" title="Re-pack pieces into tidy rows">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2" width="6" height="4.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9.5" y="2" width="5" height="4.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="1.5" y="9" width="4" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="7" y="9" width="7.5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+        Auto-arrange
+      </button>
+      <button class="btn" id="copyLink">Copy share link</button>
+      <div class="spacer"></div>
+      <span class="num" id="liveMeta" style="font-size:var(--text-xs); color:var(--ink-3)"></span>
+    </div>
+  </section>
+</main>
+
+<footer class="app">
+  <span>Gallery Wall Planner</span>
+  <span>·</span>
+  <span>Works offline. Your layout is saved in this browser and packed into the share link.</span>
+</footer>
+
+<script>
+"use strict";
+(function(){
+  const $ = s => document.querySelector(s);
+  const piecesEl = $("#pieces");
+  let uid = 1;
+
+  const EXAMPLE = {
+    units:"in", wall:{w:144,h:96}, def:{mat:2, frame:1, gap:3},
+    mode:"auto", positions:{},
+    opt:{center:true, line:false, labels:true},
+    pieces:[
+      {id:uid++, name:"Large landscape", w:24, h:36, qty:1},
+      {id:uid++, name:"Square study",    w:18, h:18, qty:2},
+      {id:uid++, name:"Portrait",        w:16, h:20, qty:2},
+      {id:uid++, name:"Small print",     w:8,  h:10, qty:4},
+    ]
+  };
+
+  let S = load() || structuredClone(EXAMPLE);
+  // ensure ids
+  S.pieces.forEach(p => { if(p.id==null) p.id = uid++; else uid = Math.max(uid, p.id+1); });
+
+  // ---------- persistence ----------
+  function save(){
+    try{ localStorage.setItem("gwp", JSON.stringify(S)); }catch(e){}
+    writeURL();
+  }
+  function load(){
+    const fromURL = readURL();
+    if(fromURL) return fromURL;
+    try{ const s = localStorage.getItem("gwp"); return s ? JSON.parse(s) : null; }catch(e){ return null; }
+  }
+  function writeURL(){
+    try{
+      const json = JSON.stringify(S);
+      const packed = btoa(unescape(encodeURIComponent(json)));
+      history.replaceState(null,"","#" + packed);
+    }catch(e){}
+  }
+  function readURL(){
+    try{
+      const h = location.hash.slice(1);
+      if(!h) return null;
+      const json = decodeURIComponent(escape(atob(h)));
+      const o = JSON.parse(json);
+      if(o && o.wall && Array.isArray(o.pieces)) return o;
+    }catch(e){}
+    return null;
+  }
+
+  // ---------- units ----------
+  function unitLabel(){ return S.units === "cm" ? "cm" : "in"; }
+  // area conversion: in² -> ft² ; cm² -> m²
+  function areaText(unitArea){
+    if(S.units === "cm"){
+      const m2 = unitArea / 10000;
+      return { v: m2.toFixed(m2<10?2:1), u:"m²" };
+    }
+    const ft2 = unitArea / 144;
+    return { v: ft2.toFixed(ft2<10?1:0), u:"ft²" };
+  }
+  function dimText(v){
+    // pretty: drop trailing zeros
+    const n = Math.round(v*100)/100;
+    return Number.isInteger(n) ? String(n) : String(n);
+  }
+
+  // ---------- geometry ----------
+  // framed outer size of a single piece
+  function outer(p){
+    const mat = p.mat   != null ? +p.mat   : +S.def.mat;
+    const frm = p.frame != null ? +p.frame : +S.def.frame;
+    return {
+      w: +p.w + 2*mat + 2*frm,
+      h: +p.h + 2*mat + 2*frm,
+      mat, frm
+    };
+  }
+  // expand pieces by quantity into a flat list of framed units, each with a stable key
+  function units(){
+    const out = [];
+    S.pieces.forEach(p=>{
+      const o = outer(p);
+      const qty = Math.max(1, Math.round(+p.qty||1));
+      for(let i=0;i<qty;i++) out.push({key:`${p.id}#${i}`, src:p, ...o, name:p.name, artW:+p.w, artH:+p.h});
+    });
+    return out;
+  }
+
+  // shelf-pack into rows that fit wall width; returns rows + placed rects
+  function autoPack(){
+    const list = units();
+    const W = +S.wall.w, H = +S.wall.h, gap = +S.def.gap;
+    const rows = [];
+    let row = [], rowW = 0;
+    list.forEach(u=>{
+      const add = (row.length? gap:0) + u.w;
+      if(row.length && rowW + add > W){ rows.push({items:row, w:rowW}); row=[]; rowW=0; }
+      row.push(u);
+      rowW += (row.length>1? gap:0) + u.w;
+    });
+    if(row.length) rows.push({items:row, w:rowW});
+
+    const rowH = rows.map(r=> Math.max(0,...r.items.map(i=>i.h)));
+    const blockH = rowH.reduce((a,b)=>a+b,0) + gap*Math.max(0,rows.length-1);
+
+    let y0 = (H - blockH)/2;
+    const pos = {};               // key -> {x,y}
+    rows.forEach((r,ri)=>{
+      const rh = rowH[ri];
+      let x = S.opt.center ? (W - r.w)/2 : 0;
+      r.items.forEach(u=>{
+        pos[u.key] = { x, y: y0 + (rh - u.h)/2 };
+        x += u.w + gap;
+      });
+      y0 += rh + gap;
+    });
+    return { list, pos };
+  }
+
+  // final placement: auto positions, with manual drags layered on top
+  function layout(){
+    const W = +S.wall.w, H = +S.wall.h;
+    const { list, pos } = autoPack();
+    const placed = list.map(u=>{
+      let p = (S.mode === "manual" && S.positions && S.positions[u.key]) || pos[u.key] || {x:0,y:0};
+      // clamp to wall when manually placed (keeps it reachable after wall resize)
+      let x = p.x, y = p.y;
+      if(S.mode === "manual"){
+        x = Math.max(0, Math.min(x, Math.max(0, W - u.w)));
+        y = Math.max(0, Math.min(y, Math.max(0, H - u.h)));
+      }
+      return {...u, x, y};
+    });
+
+    // bounding box of what's actually placed (for the arrangement stat)
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    placed.forEach(p=>{ minX=Math.min(minX,p.x); minY=Math.min(minY,p.y); maxX=Math.max(maxX,p.x+p.w); maxY=Math.max(maxY,p.y+p.h); });
+    const widest = placed.length ? maxX-minX : 0;
+    const blockH = placed.length ? maxY-minY : 0;
+
+    return { placed, blockH, widest, W, H };
+  }
+
+  // ---------- render ----------
+  function render(){
+    renderPieces();
+    const L = layout();
+    renderSummary(L);
+    renderCanvas(L);
+    $(".uLabel") && document.querySelectorAll(".uLabel").forEach(e=>e.textContent = unitLabel());
+    save();
+  }
+
+  function renderPieces(){
+    piecesEl.innerHTML = "";
+    if(!S.pieces.length){
+      const d = document.createElement("p");
+      d.style.cssText="font-size:var(--text-sm); color:var(--ink-3); margin:0";
+      d.textContent = "No artwork yet — add a piece or paste from a spreadsheet.";
+      piecesEl.appendChild(d);
+      return;
+    }
+    const u = unitLabel();
+    S.pieces.forEach(p=>{
+      const o = outer(p);
+      const W = +S.wall.w;
+      const over = o.w > W;
+      const el = document.createElement("div");
+      el.className = "piece" + (over? " over":"");
+      el.dataset.id = p.id;
+      el.innerHTML = `
+        <div class="top">
+          <span class="sw"></span>
+          <span class="name"><input type="text" data-k="name" value="${escapeAttr(p.name||"")}" placeholder="Untitled" aria-label="Piece name"></span>
+          <button class="del" data-act="del" title="Remove" aria-label="Remove piece">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 2.5l8 8M10.5 2.5l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="dims">
+          <div class="mini"><label>W (${u})</label><input type="number" min="0.25" step="0.25" data-k="w" value="${p.w}"></div>
+          <span class="x">×</span>
+          <div class="mini"><label>H (${u})</label><input type="number" min="0.25" step="0.25" data-k="h" value="${p.h}"></div>
+          <div class="mini"><label>Qty</label><input type="number" min="1" step="1" data-k="qty" value="${p.qty||1}"></div>
+        </div>
+        <div class="ovr">
+          <div class="mini"><label>Matte</label><input type="number" min="0" step="0.25" data-k="mat" value="${p.mat ?? ""}" placeholder="${S.def.mat}"></div>
+          <div class="mini"><label>Frame</label><input type="number" min="0" step="0.125" data-k="frame" value="${p.frame ?? ""}" placeholder="${S.def.frame}"></div>
+          <div class="mini"><label>Framed</label><input type="text" value="${dimText(o.w)}×${dimText(o.h)}" disabled style="text-align:center; color:var(--ink-3); border-style:dashed"></div>
+        </div>`;
+      piecesEl.appendChild(el);
+    });
+  }
+
+  function renderSummary(L){
+    const u = unitLabel();
+    const wallArea = +S.wall.w * +S.wall.h;
+    let framedArea = 0, artArea = 0, count = 0;
+    L.placed.forEach(p=>{ framedArea += p.w*p.h; artArea += p.artW*p.artH; count++; });
+    const wA = areaText(wallArea), fA = areaText(framedArea);
+    const cover = wallArea>0 ? Math.round(framedArea/wallArea*100) : 0;
+
+    const tallOver = L.blockH > +S.wall.h + 0.01;
+    const wideOver = L.widest > +S.wall.w + 0.01;
+
+    const stats = [
+      {k:"Pieces", v:`${count}`, cls:""},
+      {k:"Wall area", v:`${wA.v}<small> ${wA.u}</small>`, cls:""},
+      {k:"Framed area", v:`${fA.v}<small> ${fA.u}</small>`, cls:""},
+      {k:"Wall coverage", v:`${cover}<small> %</small>`, cls:""},
+      {k:"Arrangement", v:`${dimText(round(L.widest))}<small> × ${dimText(round(L.blockH))} ${u}</small>`, cls:(tallOver||wideOver)?"flag":"fit"},
+    ];
+    $("#summary").innerHTML = stats.map(s=>`<div class="stat ${s.cls}"><span class="v num">${s.v}</span><span class="k">${s.k}</span></div>`).join("");
+
+    // notice
+    const msgs = [];
+    if(wideOver) msgs.push(`A row is ${dimText(round(L.widest-(+S.wall.w)))} ${u} wider than the wall.`);
+    if(tallOver) msgs.push(`The arrangement is ${dimText(round(L.blockH-(+S.wall.h)))} ${u} taller than the wall.`);
+    const single = L.placed.find(p=>p.w>+S.wall.w);
+    if(single) msgs.push(`"${single.name||"A piece"}" alone is wider than the wall.`);
+    const n = $("#notice");
+    if(msgs.length){ $("#noticeText").textContent = "Doesn't fit — " + msgs.join(" ") + " Reduce spacing, sizes, or split across walls."; n.classList.add("show"); }
+    else n.classList.remove("show");
+
+    // print + live meta
+    const meta = `Wall ${dimText(S.wall.w)}×${dimText(S.wall.h)} ${u} · ${count} pieces · ${cover}% coverage`;
+    $("#printMeta").textContent = meta;
+    $("#liveMeta").textContent = meta;
+    $("#printTitle").textContent = "Gallery Wall Layout";
+  }
+
+  function renderCanvas(L){
+    const svg = $("#wall");
+    const W = +S.wall.w, H = +S.wall.h;
+    if(!(W>0 && H>0) || !L.placed.length){
+      svg.innerHTML = `<foreignObject x="0" y="0" width="100" height="100"></foreignObject>`;
+      svg.removeAttribute("viewBox");
+      $("#canvasWrap").querySelector(".empty")?.remove();
+      svg.style.display="none";
+      let e = $("#canvasWrap").querySelector(".empty");
+      if(!e){ e=document.createElement("div"); e.className="empty"; e.innerHTML=`<svg width="40" height="32" viewBox="0 0 40 32" fill="none"><rect x="1" y="1" width="38" height="30" rx="2" stroke="currentColor" stroke-width="1.4"/><rect x="7" y="8" width="11" height="16" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="23" y="11" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.4"/></svg><div>Enter a wall size and add artwork to see the layout.</div>`; $("#canvasWrap").appendChild(e); }
+      $("#scaleBadge").textContent="";
+      return;
+    }
+    $("#canvasWrap").querySelector(".empty")?.remove();
+    svg.style.display="block";
+
+    const pad = Math.max(W,H)*0.06 + 6;   // label margin in wall units
+    stagePad = pad; stageW = W; stageH = H;
+    const vbW = W + pad*2, vbH = H + pad*2;
+    svg.setAttribute("viewBox", `0 0 ${vbW} ${vbH}`);
+    svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+
+    const u = unitLabel();
+    const showLabels = S.opt.labels;
+    const sw = Math.max(W,H)/600; // base stroke
+
+    let g = `<g transform="translate(${pad},${pad})">`;
+    // wall face
+    g += `<rect x="0" y="0" width="${W}" height="${H}" fill="var(--wall-face)" stroke="var(--line-2)" stroke-width="${sw*1.5}"/>`;
+
+    // 57" center line guide
+    if(S.opt.line && (S.units==="in") && 57 < H){
+      const y = H - 57; // measured from floor (bottom)
+      g += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="var(--accent)" stroke-width="${sw}" stroke-dasharray="${sw*4} ${sw*3}" opacity=".7"/>`;
+      g += `<text x="${sw*4}" y="${y - sw*4}" class="pieceDim" style="fill:var(--accent-ink); font-size:${Math.max(7,H*0.022)}px">57" center</text>`;
+    }
+    if(S.opt.line && S.units==="cm" && 145 < H){
+      const y = H - 145;
+      g += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="var(--accent)" stroke-width="${sw}" stroke-dasharray="${sw*4} ${sw*3}" opacity=".7"/>`;
+      g += `<text x="${sw*4}" y="${y - sw*4}" class="pieceDim" style="fill:var(--accent-ink); font-size:${Math.max(7,H*0.022)}px">145cm center</text>`;
+    }
+
+    // pieces — each in a draggable group
+    const fs = Math.max(6, Math.min(W,H)*0.03);
+    L.placed.forEach(p=>{
+      const x=p.x, y=p.y, fw=p.w, fh=p.h, frm=p.frm, mat=p.mat;
+      let u = `<g class="unit" data-key="${escapeAttr(p.key)}" tabindex="0" role="button" aria-label="${escapeAttr((p.name||'Piece')+' '+dimText(p.artW)+' by '+dimText(p.artH)+', drag to move')}">`;
+      // hit area + frame
+      u += `<rect x="${x}" y="${y}" width="${fw}" height="${fh}" fill="var(--frame)" stroke="var(--frame-edge)" stroke-width="${sw}" rx="${sw}"/>`;
+      // mat
+      const mx=x+frm, my=y+frm, mw=fw-2*frm, mh=fh-2*frm;
+      if(mw>0&&mh>0) u += `<rect x="${mx}" y="${my}" width="${mw}" height="${mh}" fill="var(--mat)"/>`;
+      // art
+      const ax=x+frm+mat, ay=y+frm+mat, aw=fw-2*(frm+mat), ah=fh-2*(frm+mat);
+      if(aw>0&&ah>0){
+        u += `<rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="var(--art)"/>`;
+        u += `<rect x="${ax}" y="${ay}" width="${aw}" height="${ah}" fill="none" stroke="var(--art-2)" stroke-width="${sw*.6}"/>`;
+        if(showLabels && aw>fs*3 && ah>fs*3){
+          const cx = x+fw/2;
+          u += `<text x="${cx}" y="${ay+ah/2}" text-anchor="middle" class="pieceLabel" style="font-size:${fs}px">${escapeXML(truncate(p.name,Math.floor(aw/(fs*0.62)) || 1))}</text>`;
+          u += `<text x="${cx}" y="${ay+ah/2+fs*1.25}" text-anchor="middle" class="pieceDim" style="font-size:${fs*0.8}px">${dimText(p.artW)}×${dimText(p.artH)}</text>`;
+        }
+      }
+      u += `</g>`;
+      g += u;
+    });
+
+    // wall dimension labels
+    const dfs = Math.max(8, Math.min(W,H)*0.035);
+    g += `<text x="${W/2}" y="${-pad*0.3}" text-anchor="middle" class="wallDim" style="font-size:${dfs}px">${dimText(S.wall.w)} ${u}</text>`;
+    g += `<text x="${-pad*0.3}" y="${H/2}" text-anchor="middle" class="wallDim" transform="rotate(-90 ${-pad*0.3} ${H/2})" style="font-size:${dfs}px">${dimText(S.wall.h)} ${u}</text>`;
+
+    g += `</g>`;
+    svg.innerHTML = g;
+    attachDrag();
+
+    // scale badge: how many wall-units per ... show ratio at current px width
+    requestAnimationFrame(()=>{
+      const px = svg.getBoundingClientRect().width;
+      if(px>0){ const perUnit = px/vbW; $("#scaleBadge").textContent = `1 ${u} ≈ ${perUnit.toFixed(2)} px`; }
+    });
+  }
+
+  // ---------- drag to arrange ----------
+  let stagePad=0, stageW=0, stageH=0, drag=null;
+
+  function svgPoint(evt){
+    const svg=$("#wall");
+    const pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY;
+    const ctm=svg.getScreenCTM(); if(!ctm) return null;
+    return pt.matrixTransform(ctm.inverse());   // viewBox coords
+  }
+  // switch into manual mode, baking current auto positions so nothing jumps
+  function bakeManual(){
+    if(S.mode==="manual" && S.positions) return;
+    const L=layout();
+    S.positions={}; L.placed.forEach(p=>S.positions[p.key]={x:p.x,y:p.y});
+    S.mode="manual";
+  }
+  function attachDrag(){
+    $("#wall").querySelectorAll(".unit").forEach(el=>{
+      el.addEventListener("pointerdown", onDown);
+      el.addEventListener("keydown", onKey);
+    });
+  }
+  function onDown(e){
+    if(e.button!=null && e.button!==0) return;
+    e.preventDefault();
+    const el=e.currentTarget, key=el.dataset.key;
+    const pt=svgPoint(e); if(!pt) return;
+    const u=layout().placed.find(p=>p.key===key); if(!u) return;
+    bakeManual();
+    drag={el,key,w:u.w,h:u.h,ox:u.x,oy:u.y,dx:(pt.x-stagePad)-u.x,dy:(pt.y-stagePad)-u.y};
+    el.classList.add("dragging");
+    el.parentNode.appendChild(el);                 // raise to front
+    try{ el.setPointerCapture(e.pointerId); }catch(_){}
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp, {once:true});
+    window.addEventListener("pointercancel", onUp, {once:true});
+  }
+  function onMove(e){
+    if(!drag) return;
+    const pt=svgPoint(e); if(!pt) return;
+    let nx=pt.x-stagePad-drag.dx, ny=pt.y-stagePad-drag.dy;
+    nx=Math.max(0,Math.min(nx, Math.max(0,stageW-drag.w)));
+    ny=Math.max(0,Math.min(ny, Math.max(0,stageH-drag.h)));
+    nx=Math.round(nx*100)/100; ny=Math.round(ny*100)/100;
+    S.positions[drag.key]={x:nx,y:ny};
+    drag.el.setAttribute("transform",`translate(${(nx-drag.ox).toFixed(3)},${(ny-drag.oy).toFixed(3)})`);
+  }
+  function onUp(){
+    if(!drag) return;
+    drag.el.classList.remove("dragging");
+    drag=null;
+    window.removeEventListener("pointermove", onMove);
+    render();   // commit: re-pack stats, persist, save link
+  }
+  // arrow-key nudge (accessibility)
+  function onKey(e){
+    const key=e.currentTarget.dataset.key;
+    const step = e.shiftKey ? (S.units==="cm"?2:2) : (S.units==="cm"?0.5:0.5);
+    let dx=0,dy=0;
+    if(e.key==="ArrowLeft")dx=-step; else if(e.key==="ArrowRight")dx=step;
+    else if(e.key==="ArrowUp")dy=-step; else if(e.key==="ArrowDown")dy=step;
+    else return;
+    e.preventDefault();
+    bakeManual();
+    const u=layout().placed.find(p=>p.key===key); if(!u) return;
+    let nx=Math.max(0,Math.min(u.x+dx,Math.max(0,stageW-u.w)));
+    let ny=Math.max(0,Math.min(u.y+dy,Math.max(0,stageH-u.h)));
+    S.positions[key]={x:Math.round(nx*100)/100,y:Math.round(ny*100)/100};
+    render();
+    // restore focus to the same piece
+    const again=$("#wall").querySelector(`.unit[data-key="${cssEsc(key)}"]`);
+    again && again.focus();
+  }
+  function cssEsc(s){ return String(s).replace(/["\\#]/g, "\\$&"); }
+
+  // ---------- helpers ----------
+  function round(v){ return Math.round(v*100)/100; }
+  function truncate(s,n){ s=String(s||""); return s.length>n ? s.slice(0,Math.max(1,n-1))+"…" : s; }
+  function escapeXML(s){ return String(s).replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+  function escapeAttr(s){ return String(s).replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+
+  // ---------- events ----------
+  // global inputs
+  $("#wallW").addEventListener("input", e=>{ S.wall.w=+e.target.value||0; render(); });
+  $("#wallH").addEventListener("input", e=>{ S.wall.h=+e.target.value||0; render(); });
+  $("#defMat").addEventListener("input", e=>{ S.def.mat=+e.target.value||0; render(); });
+  $("#defFrame").addEventListener("input", e=>{ S.def.frame=+e.target.value||0; render(); });
+  $("#gap").addEventListener("input", e=>{ S.def.gap=+e.target.value||0; render(); });
+  $("#units").addEventListener("change", e=>{ S.units=e.target.value; render(); });
+  $("#optCenter").addEventListener("change", e=>{ S.opt.center=e.target.checked; render(); });
+  $("#optLine").addEventListener("change", e=>{ S.opt.line=e.target.checked; render(); });
+  $("#optLabels").addEventListener("change", e=>{ S.opt.labels=e.target.checked; render(); });
+
+  // piece list (delegated)
+  piecesEl.addEventListener("input", e=>{
+    const el = e.target.closest(".piece"); if(!el) return;
+    const id = +el.dataset.id; const p = S.pieces.find(x=>x.id===id); if(!p) return;
+    const k = e.target.dataset.k; if(!k) return;
+    let v = e.target.value;
+    if(k==="name"){ p.name=v; const sw=el.querySelector(".sw"); render(); restoreFocus(id,k,e.target); return; }
+    if(k==="mat"||k==="frame"){ p[k] = v==="" ? null : (+v||0); }
+    else p[k] = +v||0;
+    render(); restoreFocus(id,k,e.target);
+  });
+  piecesEl.addEventListener("click", e=>{
+    const btn = e.target.closest("[data-act=del]"); if(!btn) return;
+    const el = btn.closest(".piece"); const id=+el.dataset.id;
+    S.pieces = S.pieces.filter(x=>x.id!==id); render();
+  });
+  // keep cursor on the field being edited after re-render
+  function restoreFocus(id,k,old){
+    const sel = `.piece[data-id="${id}"] [data-k="${k}"]`;
+    const n = document.querySelector(sel);
+    if(n && document.activeElement!==n){
+      const pos = old.selectionStart;
+      n.focus();
+      try{ if(pos!=null && n.type!=="number") n.setSelectionRange(pos,pos); }catch(e){}
+    }
+  }
+
+  $("#add").addEventListener("click", ()=>{
+    S.pieces.push({id:uid++, name:"", w:16, h:20, qty:1});
+    render();
+    const last = piecesEl.lastElementChild?.querySelector('[data-k="name"]');
+    last && last.focus();
+  });
+
+  $("#reset").addEventListener("click", ()=>{
+    if(!confirm("Reset to the example layout? Your current pieces will be cleared.")) return;
+    S = structuredClone(EXAMPLE); uid = 1; S.pieces.forEach(p=>p.id=uid++);
+    location.hash=""; syncGlobals(); render();
+  });
+
+  // CSV import
+  function parseCSV(text){
+    const rows = [];
+    text.split(/\r?\n/).forEach(line=>{
+      if(!line.trim()) return;
+      const cells = line.split(/\t|,(?![^"]*"(?:[^"]*"[^"]*")*[^"]*$)/).map(c=>c.trim().replace(/^"|"$/g,""));
+      // find first two numeric cells as w,h; text before = name
+      let name="", nums=[];
+      cells.forEach(c=>{
+        const n = parseFloat(c);
+        if(!isNaN(n) && /^-?\d*\.?\d+/.test(c)) nums.push(n);
+        else if(!nums.length) name = name ? name+" "+c : c;
+      });
+      if(nums.length>=2){
+        rows.push({id:uid++, name:name||"Untitled", w:nums[0], h:nums[1],
+          mat: nums[2]!=null?nums[2]:null, frame:nums[3]!=null?nums[3]:null,
+          qty: nums[4]!=null?Math.max(1,Math.round(nums[4])):1});
+      }
+    });
+    return rows;
+  }
+  $("#importBtn").addEventListener("click", ()=>{
+    const rows = parseCSV($("#csv").value);
+    if(!rows.length){ alert("Couldn't find any rows with a width and height. Each line needs at least two numbers."); return; }
+    S.pieces = rows; render(); $("#csv").value="";
+    closest($("#csv"),"details").open=false;
+  });
+  $("#appendBtn").addEventListener("click", ()=>{
+    const rows = parseCSV($("#csv").value);
+    if(!rows.length){ alert("Couldn't find any rows with a width and height."); return; }
+    S.pieces = S.pieces.concat(rows); render(); $("#csv").value="";
+  });
+  function closest(el,sel){ return el.closest(sel); }
+
+  $("#autoArrange").addEventListener("click", ()=>{ S.mode="auto"; S.positions={}; render(); });
+  $("#print").addEventListener("click", ()=>window.print());
+  $("#copyLink").addEventListener("click", async ()=>{
+    writeURL();
+    try{ await navigator.clipboard.writeText(location.href); flash($("#copyLink"),"Copied ✓"); }
+    catch(e){ flash($("#copyLink"),"Press ⌘C"); prompt("Copy this link:", location.href); }
+  });
+  function flash(btn,txt){ const o=btn.textContent; btn.textContent=txt; setTimeout(()=>btn.textContent=o,1400); }
+
+  // sync the global input fields to S (used on reset / load-from-url)
+  function syncGlobals(){
+    $("#wallW").value=S.wall.w; $("#wallH").value=S.wall.h;
+    $("#defMat").value=S.def.mat; $("#defFrame").value=S.def.frame; $("#gap").value=S.def.gap;
+    $("#units").value=S.units||"in";
+    $("#optCenter").checked=!!S.opt.center; $("#optLine").checked=!!S.opt.line; $("#optLabels").checked=S.opt.labels!==false;
+  }
+
+  // redraw scale badge on resize
+  let rt; window.addEventListener("resize", ()=>{ clearTimeout(rt); rt=setTimeout(()=>renderCanvas(layout()),120); });
+
+  // init
+  if(!S.opt) S.opt = {center:true,line:false,labels:true};
+  if(!S.mode) S.mode = "auto";
+  if(!S.positions) S.positions = {};
+  syncGlobals();
+  render();
+})();
+</script>
+</body>
+</html>
